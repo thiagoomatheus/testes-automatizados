@@ -423,3 +423,83 @@ Além disso, podemos criar um teste para verificar se ao deletar a lista de prod
     });
 
 Este exemplo se caracteriza um teste de integração, já que utiliza-se de mais compoentes em seu teste.
+
+### Testando respostas assíncornas
+
+Muitas vezes nos deparamos com componentes ou elementos que são renderizados de forma assíncrona, ou seja, é necessário aguardar a resposta de algo para que seja exibido algo na tela.
+
+Isso significa que se buscarmos algo na tela sem aguaradar essa resposta o teste irá falhar.
+
+Para solucionar isso temos duas saídas. A primeira é usar a função `waitFor()` que recebe uma função de callback com o que queremos buscar em seguida. A segunda opção é mais simples! Ao buscarmos um elemento usamos o matcher `findBy...()` e aqui podemos usar o `findByText()`, `findByRole()`, dentre outros. Apenas a diretiva que muda, ao invés de getBy usamos findBy. Apenas um detalhe, para esses dois métodos, seja o `waitFor()` ou o `findBy...()` é necessário usar o o await na chamda da função.
+
+Vamos a um exemplo. 
+
+Imagine que o componente do exemplo anterior, de produtos, agora é assíncrono e recebe sua lista de produtos via uma api. Vamos simular isso com o componente dessa forma:
+
+    import React, { useEffect } from "react";
+
+    type Produtos = {
+        id: number
+        nome: string
+        preco: number
+    }[]
+
+    const produtosInciais: Produtos = [
+        {id: 1, nome: 'Notebook', preco: 1000},
+        {id: 2, nome: 'Smartphone', preco: 500},
+    ];
+
+    export default function Produtos() {
+
+        const [produtos, setProdutos] = React.useState<Produtos | null>(null);
+
+        useEffect(() => {
+            setTimeout(() => {
+                setProdutos(produtosInciais)
+            }, 2000)
+        }, [])
+
+        return (
+            <div>
+                <h1>Produtos</h1>
+                <ul role="products-list">
+                    {produtos && produtos.map((produto) => (
+                        <li role="product-item" key={produto.id}>
+                            id: {produto.id} - {produto.nome} - R$ {produto.preco}
+                        </li>
+                    ))}
+                </ul>
+                {produtos && <button onClick={() => setProdutos(produtos.filter(produto => produto.id !== 1))}>Deletar</button>}
+            </div>
+        );
+    }
+
+Agora, se buscarmos pelo produto 1 de forma síncrona nós receberemos um erro.
+
+Para isso, vamos fazer um teste usando o `findBy...()` e `waitFor()`. Acompanhe o código:
+
+    import React from "react";
+    import { describe, expect, test } from "@jest/globals";
+    import { render, screen, waitFor } from "@testing-library/react";
+    import ProdutosAssincrono from "../components/ProdutosAssincrono";
+    import '@testing-library/jest-dom';
+
+    describe("Produtos", () => {
+        test("Se há produtos exibidos na tela com find", async () => {
+            render(<ProdutosAssincrono />)
+
+            expect(await screen.findAllByRole("product-item", {}, {timeout: 2100}))
+        })
+
+        test("Se há produtos exibidos na tela com waitFor", async () => {
+            render(<ProdutosAssincrono />)
+
+            waitFor(() => {
+                screen.findAllByRole("product-item")
+            }, {
+                timeout: 2000
+            })
+        })
+    });
+
+Por padrão, o findBy e o waitFor usam o tempo de 1000 ms ou 1s, mas podemos alterar isso por meio das options. Porém, nos testes que fiz no caso do findBy foi necessário passar uns milisegundos a mais para que ele não retornasse erro.
