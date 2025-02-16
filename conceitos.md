@@ -6,7 +6,7 @@
 
 - Trazem mais confiança na hora de fazer deploy para produção.
 
-- Testes também são fundamentais para colocar a prova o código, ou seja, eles vão mostrar se nosso código é bom ou não.
+- Testes também colocam a prova o código e trás a necessidade de uso de boas práticas.
 
 - Como eles são automatizadas, você pode com um comando rodar muitos cenários de testes.
 
@@ -424,7 +424,7 @@ Além disso, podemos criar um teste para verificar se ao deletar a lista de prod
 
 Este exemplo se caracteriza um teste de integração, já que utiliza-se de mais compoentes em seu teste.
 
-### Testando respostas assíncornas
+### Testando respostas assíncronas
 
 Muitas vezes nos deparamos com componentes ou elementos que são renderizados de forma assíncrona, ou seja, é necessário aguardar a resposta de algo para que seja exibido algo na tela.
 
